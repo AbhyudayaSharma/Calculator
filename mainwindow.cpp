@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QGridLayout>
 #include <QMessageBox>
+#include <QDebug>
+
+#define DISPLAY_DIGIT_SCALE_FACTOR 40 + 1
 
 unsigned int MainWindow::buflen = 0;
 
@@ -14,10 +17,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     hasDecimal = false;
 
-    ui->button_clear->setEnabled(false);
+    currentOperator = Operator::NONE;
 
+    setOperatorsEnabled(false);
     // Connect the exit button in the file menu
     connect(ui->actionExit, SIGNAL(triggered(bool)), this, SLOT(close()));
+
+    ui->statusBar->showMessage("Ready");
+    setCentralWidget(ui->centralWidget);
 }
 
 MainWindow::~MainWindow()
@@ -26,47 +33,47 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::appendDisplayedNumber(Number number, bool doUpdate) {
-    if (++buflen > 10) {
+    if (++buflen > displayDigitCount) {
         emit ui->numDisplay->overflow();
         return;
     }
 
-    ui->button_clear->setEnabled(true);
+    setOperatorsEnabled();
 
     switch (number) {
     case ZERO:
-        inputData << 0;
+        inputStringStream << 0;
         break;
     case ONE:
-        inputData << 1;
+        inputStringStream << 1;
         break;
     case TWO:
-        inputData << 2;
+        inputStringStream << 2;
         break;
     case THREE:
-        inputData << 3;
+        inputStringStream << 3;
         break;
     case FOUR:
-        inputData << 4;
+        inputStringStream << 4;
         break;
     case FIVE:
-        inputData << 5;
+        inputStringStream << 5;
         break;
     case SIX:
-        inputData << 6;
+        inputStringStream << 6;
         break;
     case SEVEN:
-        inputData << 7;
+        inputStringStream << 7;
         break;
     case EIGHT:
-        inputData << 8;
+        inputStringStream << 8;
         break;
     case NINE:
-        inputData << 9;
+        inputStringStream << 9;
         break;
     case DECIMAL:
         hasDecimal = true;
-        inputData << ".";
+        inputStringStream << ".";
         break;
     default:
         throw std::runtime_error("MainWindow::appendDisplayedNumber : Unknown Number value");
@@ -79,7 +86,54 @@ void MainWindow::appendDisplayedNumber(Number number, bool doUpdate) {
 }
 
 void MainWindow::updateResult() {
-    ui->numDisplay->display(inputData.str().c_str());
+    ui->numDisplay->display(inputStringStream.str().c_str());
+}
+
+void MainWindow::setOperatorsEnabled(bool enable)
+{
+    ui->button_clear->setEnabled(enable);
+    ui->button_add->setEnabled(enable);
+    ui->button_subtract->setEnabled(enable);
+    ui->button_divide->setEnabled(enable);
+    ui->button_multiply->setEnabled(enable);
+    ui->button_equal->setEnabled(enable);
+}
+
+void MainWindow::resizeEvent(QResizeEvent * event)
+{
+    QMainWindow::resizeEvent(event);
+    displayDigitCount = ui->numDisplay->width() / DISPLAY_DIGIT_SCALE_FACTOR;
+    ui->numDisplay->setDigitCount(displayDigitCount);
+}
+
+void MainWindow::clearStream(std::string num)
+{
+   inputStringStream.clear();
+   inputStringStream.str(num);
+   buflen = 0;
+   hasDecimal = false;
+}
+
+/**
+ * @brief Gives a uniform way of invoking any binary operator
+ * @param op The operator being triggered
+ * @throw Can throw any error depending on the mathematical
+ *        operation being performed
+ */
+void MainWindow::binaryOperatorTriggered(Operator op)
+{
+    if (currentOperator != Operator::NONE) {
+        ui->button_equal->click();
+        bmh.setLValue(ui->numDisplay->value());
+    } else {
+        clearStream();
+        bmh.setLValue(ui->numDisplay->value());
+    }
+
+    hasDecimal = false;
+    currentOperator = op;
+    setOperatorsEnabled(false);
+    ui->button_clear->setEnabled(true);
 }
 
 /*--------- SLOTS ----------*/
@@ -87,7 +141,7 @@ void MainWindow::updateResult() {
 // Slots for Numerical Button input
 void MainWindow::on_button_zero_clicked()
 {
-    if (buflen) {
+    if (buflen || bmh.hasLvalue()) {
         appendDisplayedNumber(ZERO, true);
     }
 }
@@ -150,21 +204,71 @@ void MainWindow::on_button_decimal_clicked()
 }
 
 // Slot for  clear button
-void MainWindow::on_button_clear_clicked()
-{
-    buflen = 0;
-    inputData.str("0");
+void MainWindow::on_button_clear_clicked() {
+    clearStream("0");
     hasDecimal = false;
-    updateResult();
-    ui->button_clear->setEnabled(false);
+    ui->numDisplay->display("0");
+    setOperatorsEnabled(false);
+    currentOperator = Operator::NONE;
+    ui->statusBar->showMessage("Ready");
 }
 
-// Handles display overflow
+/// Handles display overflow
 void MainWindow::on_numDisplay_overflow()
 {
-    const QString ERROR_MESSAGE = "The digit count exceeds the limit of the calculator.\nThe display will be cleared.";
+    const QString ERROR_MESSAGE = "The digit count exceeds the limit of the calculator. The display will be cleared."
+                                  "\nTry resizing the window to increase digits handled by the calculator.";
+
     QMessageBox::information(this, "Overflow", ERROR_MESSAGE);
     ui->button_clear->click();
 }
+
+void MainWindow::on_button_add_clicked() {
+    binaryOperatorTriggered(Operator::ADD);
+    ui->statusBar->showMessage("Operation selected: ADD");
+}
+
+void MainWindow::on_button_subtract_clicked() {
+    binaryOperatorTriggered(Operator::SUBTRACT);
+    ui->statusBar->showMessage("Operation selected: SUBTRACT");
+}
+
+void MainWindow::on_button_multiply_clicked() {
+    binaryOperatorTriggered(Operator::MULTIPLY);
+    ui->statusBar->showMessage("Operation selected: MULTIPLY");
+}
+
+ /**
+ * @brief performs lvalue / rvalue
+ * @throw Can throw a divide by zero error
+ */
+void MainWindow::on_button_divide_clicked() {
+    binaryOperatorTriggered(Operator::DIVIDE);
+    ui->statusBar->showMessage("Operation selected: DIVIDE");
+}
+
+void MainWindow::on_button_equal_clicked() {
+    // Ignore if no lvalue
+    if (bmh.hasLvalue()) {
+        bmh.setRValue(ui->numDisplay->value());
+        try {
+            bmh.performOperation(currentOperator);
+        } catch (std::runtime_error & e) {
+            QMessageBox::critical(this, "Fatal error", e.what());
+            ui->button_clear->click();
+        }
+        clearStream();
+        inputStringStream << bmh.getResult();
+        bmh.reset();
+        updateResult();
+        clearStream();
+        currentOperator = Operator::NONE;
+    }
+
+    ui->statusBar->showMessage("Ready");
+}
+
+
+
 
 

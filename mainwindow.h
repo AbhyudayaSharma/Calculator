@@ -4,6 +4,9 @@
 #include <sstream>
 
 #include <QMainWindow>
+#include <QLabel>
+
+#include "binarymathhelper.h"
 
 namespace Ui {
 class MainWindow;
@@ -44,7 +47,17 @@ private slots:
 
     void on_numDisplay_overflow();
 
-private:
+    void on_button_add_clicked();
+
+    void on_button_subtract_clicked();
+
+    void on_button_multiply_clicked();
+
+    void on_button_divide_clicked();
+
+    void on_button_equal_clicked();
+
+    private:
     enum Number {
         ZERO,
         ONE,
@@ -59,14 +72,26 @@ private:
         DECIMAL
     };
 
-    static unsigned int buflen;
-
     bool hasDecimal;
-    std::stringstream inputData;
-    Ui::MainWindow *ui;
-    void appendDisplayedNumber(Number number, bool doUpdate = false) noexcept(false);
-    void updateResult();
 
+    static unsigned int buflen;
+    std::stringstream inputStringStream;
+
+    unsigned int displayDigitCount;
+
+    Ui::MainWindow *ui;
+
+    void appendDisplayedNumber(Number number, bool doUpdate = false);
+    void updateResult();
+    void setOperatorsEnabled(bool enable = true);
+    void resizeEvent(QResizeEvent *event);
+
+    BinaryMathHelper bmh;
+    Operator currentOperator;
+
+    void clearStream(std::string num = std::string());
+
+    void binaryOperatorTriggered(Operator op);
 };
 
 #endif // MAINWINDOW_H

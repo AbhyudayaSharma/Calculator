@@ -25,10 +25,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    binarymathhelper.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    binarymathhelper.h \
+    abstractmathhelper.h \
+    operator.h
 
 FORMS += \
         mainwindow.ui
+
+RESOURCES +=
