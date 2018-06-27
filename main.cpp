@@ -1,8 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
@@ -11,3 +10,4 @@ int main(int argc, char *argv[])
     w.resize(QSize(500, 400));
     return a.exec();
 }
+

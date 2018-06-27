@@ -8,8 +8,7 @@
  * @brief The BinaryMathHelper class performs binary mathematical operations
  * @implements AbstractMathHelper
  */
-class BinaryMathHelper : public AbstractMathHelper
-{
+class BinaryMathHelper : public AbstractMathHelper {
     double lvalue;
     double rvalue;
     double result;

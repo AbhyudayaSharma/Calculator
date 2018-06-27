@@ -1,7 +1,6 @@
 #include "binarymathhelper.h"
 
-void BinaryMathHelper::reset()
-{
+void BinaryMathHelper::reset() {
    hasLValue = false;
    hasRValue = false;
    lvalue = 0.0;

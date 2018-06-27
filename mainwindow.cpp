@@ -12,8 +12,8 @@ unsigned int MainWindow::buflen = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
+    ui(new Ui::MainWindow) {
+
     ui->setupUi(this);
     hasDecimal = false;
 
@@ -27,8 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setCentralWidget(ui->centralWidget);
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
@@ -89,8 +88,7 @@ void MainWindow::updateResult() {
     ui->numDisplay->display(inputStringStream.str().c_str());
 }
 
-void MainWindow::setOperatorsEnabled(bool enable)
-{
+void MainWindow::setOperatorsEnabled(bool enable) {
     ui->button_clear->setEnabled(enable);
     ui->button_add->setEnabled(enable);
     ui->button_subtract->setEnabled(enable);
@@ -99,15 +97,13 @@ void MainWindow::setOperatorsEnabled(bool enable)
     ui->button_equal->setEnabled(enable);
 }
 
-void MainWindow::resizeEvent(QResizeEvent * event)
-{
+void MainWindow::resizeEvent(QResizeEvent * event) {
     QMainWindow::resizeEvent(event);
     displayDigitCount = ui->numDisplay->width() / DISPLAY_DIGIT_SCALE_FACTOR;
     ui->numDisplay->setDigitCount(displayDigitCount);
 }
 
-void MainWindow::clearStream(std::string num)
-{
+void MainWindow::clearStream(std::string num) {
    inputStringStream.clear();
    inputStringStream.str(num);
    buflen = 0;
@@ -120,8 +116,7 @@ void MainWindow::clearStream(std::string num)
  * @throw Can throw any error depending on the mathematical
  *        operation being performed
  */
-void MainWindow::binaryOperatorTriggered(Operator op)
-{
+void MainWindow::binaryOperatorTriggered(Operator op) {
     if (currentOperator != Operator::NONE) {
         ui->button_equal->click();
         bmh.setLValue(ui->numDisplay->value());
@@ -139,60 +134,49 @@ void MainWindow::binaryOperatorTriggered(Operator op)
 /*--------- SLOTS ----------*/
 
 // Slots for Numerical Button input
-void MainWindow::on_button_zero_clicked()
-{
+void MainWindow::on_button_zero_clicked() {
     if (buflen || bmh.hasLvalue()) {
         appendDisplayedNumber(ZERO, true);
     }
 }
 
-void MainWindow::on_button_one_clicked()
-{
+void MainWindow::on_button_one_clicked() {
     appendDisplayedNumber(ONE, true);
 }
 
-void MainWindow::on_button_two_clicked()
-{
+void MainWindow::on_button_two_clicked() {
     appendDisplayedNumber(TWO, true);
 }
 
-void MainWindow::on_button_three_clicked()
-{
+void MainWindow::on_button_three_clicked() {
     appendDisplayedNumber(THREE, true);
 }
 
-void MainWindow::on_button_four_clicked()
-{
+void MainWindow::on_button_four_clicked() {
     appendDisplayedNumber(FOUR, true);
 }
 
-void MainWindow::on_button_five_clicked()
-{
+void MainWindow::on_button_five_clicked() {
     appendDisplayedNumber(FIVE, true);
 }
 
-void MainWindow::on_button_six_clicked()
-{
+void MainWindow::on_button_six_clicked() {
     appendDisplayedNumber(SIX, true);
 }
 
-void MainWindow::on_button_seven_clicked()
-{
+void MainWindow::on_button_seven_clicked() {
     appendDisplayedNumber(SEVEN, true);
 }
 
-void MainWindow::on_button_eight_clicked()
-{
+void MainWindow::on_button_eight_clicked() {
     appendDisplayedNumber(EIGHT, true);
 }
 
-void MainWindow::on_button_nine_clicked()
-{
+void MainWindow::on_button_nine_clicked() {
     appendDisplayedNumber(NINE, true);
 }
 
-void MainWindow::on_button_decimal_clicked()
-{
+void MainWindow::on_button_decimal_clicked() {
     if (!hasDecimal) {
         if (!buflen) {
             appendDisplayedNumber(ZERO);
@@ -214,8 +198,7 @@ void MainWindow::on_button_clear_clicked() {
 }
 
 /// Handles display overflow
-void MainWindow::on_numDisplay_overflow()
-{
+void MainWindow::on_numDisplay_overflow() {
     const QString ERROR_MESSAGE = "The digit count exceeds the limit of the calculator. The display will be cleared."
                                   "\nTry resizing the window to increase digits handled by the calculator.";
 
@@ -267,8 +250,4 @@ void MainWindow::on_button_equal_clicked() {
 
     ui->statusBar->showMessage("Ready");
 }
-
-
-
-
 
